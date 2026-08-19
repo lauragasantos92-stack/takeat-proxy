@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Takeat Manager - Versão Enxuta</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f1f5f9;
+      color: #0f172a;
+      height: 100vh;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 8px 16px 8px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .navbar h2 {
+      font-size: 22px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .navbar h2 small {
+      font-weight: 400;
+      font-size: 14px;
+      color: #64748b;
+    }
+    .navbar .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #cbd5e1;
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.2s;
+      color: #334155;
+    }
+    .btn-outline:hover { background: #f1f5f9; border-color: #94a3b8; }
+    .btn-danger {
+      color: #dc2626;
+      border-color: #fca5a5;
+    }
+    .btn-danger:hover { background: #fef2f2; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .stat-card {
+      background: white;
+      padding: 16px 20px;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+    }
+    .stat-card .label {
+      font-size: 13px;
+      color: #64748b;
+      font-weight: 500;
+    }
+    .stat-card .value {
+      font-size: 26px;
+      font-weight: 700;
+      margin-top: 4px;
+      color: #0f172a;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 16px;
+      background: white;
+      padding: 12px 16px;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+    }
+    .filter-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .filter-group button {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.15s;
+      color: #334155;
+    }
+    .filter-group button:hover { background: #f1f5f9; }
+    .filter-group button.active {
+      background: #4f46e5;
+      color: white;
+      border-color: #4f46e5;
+    }
+    .search-wrapper {
+      flex: 1;
+      min-width: 200px;
+    }
+    .search-wrapper input {
+      width: 100%;
+      padding: 8px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 30px;
+      font-size: 14px;
+      background: #f8fafc;
+      transition: 0.2s;
+    }
+    .search-wrapper input:focus {
+      outline: none;
+      border-color: #4f46e5;
+      background: white;
+    }
+
+    .table-wrapper {
+      flex: 1;
+      overflow: auto;
+      background: white;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      min-height: 300px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      min-width: 800px;
+    }
+    th {
+      background: #f8fafc;
+      padding: 12px 14px;
+      text-align: left;
+      font-weight: 600;
+      color: #475569;
+      border-bottom: 2px solid #e2e8f0;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      white-space: nowrap;
+    }
+    td {
+      padding: 10px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+    tr:hover td { background: #f8fafc; }
+
+    .badge-status {
+      display: inline-block;
+      padding: 3px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .badge-open {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .badge-closed {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .clickable-copy {
+      cursor: pointer;
+      font-weight: 500;
+      color: #2563eb;
+      transition: 0.1s;
+      border-bottom: 1px dashed #93c5fd;
+    }
+    .clickable-copy:hover {
+      color: #1d4ed8;
+      border-bottom-color: #2563eb;
+    }
+
+    .export-btn {
+      background: #16a34a;
+      color: white;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .export-btn:hover {
+      background: #15803d;
+      transform: scale(1.02);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #94a3b8;
+    }
+    .loading-state {
+      text-align: center;
+      padding: 40px;
+      color: #4f46e5;
+      font-weight: 500;
+    }
+
+    @media (max-width: 640px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .navbar { flex-direction: column; align-items: stretch; }
+      .navbar .actions { justify-content: space-between; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+
+<div style="display:flex; flex-direction:column; height:100vh; width:100%;">
+  <!-- Navbar -->
+  <div class="navbar">
+    <h2>🧾 Takeat Manager <small>Enxuto</small></h2>
+    <div class="actions">
+      <button class="export-btn" id="exportCsvBtn">📥 Exportar CSV</button>
+      <button class="btn-outline btn-danger" id="logoutBtn">Sair</button>
+    </div>
+  </div>
+
+  <!-- Cards (apenas Garçons e Clientes) -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card">
+      <div class="label">👨‍🍳 Garçons Ativos</div>
+      <div class="value" id="totalWaiters">0</div>
+    </div>
+    <div class="stat-card">
+      <div class="label">👤 Clientes Distintos</div>
+      <div class="value" id="totalClients">0</div>
+    </div>
+  </div>
+
+  <!-- Barra de ferramentas -->
+  <div class="toolbar">
+    <div class="filter-group">
+      <button data-range="today" class="active">Hoje</button>
+      <button data-range="yesterday">Ontem</button>
+      <button data-range="last3">Últimos 3 dias</button>
+      <button data-range="custom">Personalizado</button>
+    </div>
+    <div class="search-wrapper">
+      <input type="text" id="searchInput" placeholder="🔎 Buscar por Cliente, Garçom, Produto ou Mesa...">
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <input type="datetime-local" id="customStart" style="padding:6px 10px; border-radius:8px; border:1px solid #e2e8f0; font-size:13px;">
+      <span style="color:#94a3b8;">→</span>
+      <input type="datetime-local" id="customEnd" style="padding:6px 10px; border-radius:8px; border:1px solid #e2e8f0; font-size:13px;">
+      <button id="applyCustomBtn" style="padding:6px 16px; background:#4f46e5; color:white; border:none; border-radius:8px; font-weight:600; cursor:pointer;">Aplicar</button>
+    </div>
+  </div>
+
+  <!-- Tabela (sem valores e sem status do pedido) -->
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Data/Hora</th>
+          <th>Mesa</th>
+          <th>Status Mesa</th>
+          <th>👤 Cliente</th>
+          <th>👨‍🍳 Garçom</th>
+          <th>Produto</th>
+          <th>Qtd</th>
+          <th>Complementos</th>
+        </tr>
+      </thead>
+      <tbody id="resultsBody">
+        <tr><td colspan="8" class="loading-state">⏳ Carregando...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  // 🔗 URL DO SEU BACKEND (altere para a do Render)
+  // ============================================================
+  const BACKEND_URL = 'http://localhost:3000'; // ← substitua pelo link do Render
+
+  // ============================================================
+  // VARIÁVEIS
+  // ============================================================
+  let allRowsData = [];
+  let filteredRows = [];
+
+  // DOM refs
+  const resultsBody = document.getElementById('resultsBody');
+  const searchInput = document.getElementById('searchInput');
+  const exportCsvBtn = document.getElementById('exportCsvBtn');
+  const customStart = document.getElementById('customStart');
+  const customEnd = document.getElementById('customEnd');
+  const applyCustomBtn = document.getElementById('applyCustomBtn');
+  const logoutBtn = document.getElementById('logoutBtn');
+
+  const totalWaitersSpan = document.getElementById('totalWaiters');
+  const totalClientsSpan = document.getElementById('totalClients');
+
+  // ============================================================
+  // FUNÇÕES AUXILIARES
+  // ============================================================
+  function getComplementsString(order) {
+    if (!order.complement_categories || order.complement_categories.length === 0) return '—';
+    const comps = [];
+    order.complement_categories.forEach(cat => {
+      if (cat.order_complements) {
+        cat.order_complements.forEach(oc => {
+          const name = oc.complement?.name || 'Complemento';
+          const qtd = oc.amount || 1;
+          comps.push(`${name} x${qtd}`);
+        });
+      }
+    });
+    return comps.length > 0 ? comps.join(', ') : '—';
+  }
+
+  // ============================================================
+  // BUSCA DE DADOS (chama o backend)
+  // ============================================================
+  async function fetchData(range, startDate, endDate) {
+    let startISO, endISO;
+    const now = new Date();
+
+    if (range === 'today') {
+      const start = new Date(now);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(now);
+      end.setHours(23, 59, 59, 999);
+      startISO = start.toISOString();
+      endISO = end.toISOString();
+    } else if (range === 'yesterday') {
+      const start = new Date(now);
+      start.setDate(now.getDate() - 1);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(now);
+      end.setDate(now.getDate() - 1);
+      end.setHours(23, 59, 59, 999);
+      startISO = start.toISOString();
+      endISO = end.toISOString();
+    } else if (range === 'last3') {
+      const start = new Date(now);
+      start.setDate(now.getDate() - 2);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(now);
+      end.setHours(23, 59, 59, 999);
+      startISO = start.toISOString();
+      endISO = end.toISOString();
+    } else if (range === 'custom' && startDate && endDate) {
+      startISO = new Date(startDate).toISOString();
+      endISO = new Date(endDate).toISOString();
+    } else {
+      alert('Intervalo inválido.');
+      return;
+    }
+
+    const diffDays = (new Date(endISO) - new Date(startISO)) / (1000 * 60 * 60 * 24);
+    if (diffDays > 3) {
+      alert('⚠️ A API permite no máximo 3 dias de intervalo.');
+      return;
+    }
+
+    resultsBody.innerHTML = `<tr><td colspan="8" class="loading-state">⏳ Carregando...</td></tr>`;
+
+    try {
+      const url = `${BACKEND_URL}/api/table-sessions?start_date=${encodeURIComponent(startISO)}&end_date=${encodeURIComponent(endISO)}`;
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        const errorText = await resp.text();
+        throw new Error(`Erro ${resp.status}: ${errorText}`);
+      }
+      const data = await resp.json();
+      renderData(data);
+    } catch (err) {
+      resultsBody.innerHTML = `<tr><td colspan="8" style="color:red; text-align:center; padding:40px;">❌ Erro: ${err.message}</td></tr>`;
+    }
+  }
+
+  // ============================================================
+  // RENDERIZAÇÃO (sem valores monetários)
+  // ============================================================
+  function renderData(sessions) {
+    if (!sessions || sessions.length === 0) {
+      resultsBody.innerHTML = `<tr><td colspan="8" class="empty-state">Nenhuma comanda encontrada.</td></tr>`;
+      updateStats({ waiters: 0, clients: 0 });
+      allRowsData = [];
+      filteredRows = [];
+      return;
+    }
+
+    const rows = [];
+    const waitersSet = new Set();
+    const clientsSet = new Set();
+
+    sessions.forEach(session => {
+      const isClosed = session.status === 'completed' || session.status === 'closed';
+      const statusMesa = isClosed ? 'Fechada' : 'Aberta';
+      const mesa = session.table?.table_number || 'N/A';
+      const dataHora = new Date(session.start_time);
+      const dataStr = dataHora.toLocaleString('pt-BR');
+
+      (session.bills || []).forEach(bill => {
+        const cliente = bill.buyer?.name || '—';
+        const garcom = bill.waiter?.name || '—';
+        if (garcom !== '—') waitersSet.add(garcom);
+        if (cliente !== '—') clientsSet.add(cliente);
+
+        (bill.order_baskets || []).forEach(basket => {
+          (basket.orders || []).forEach(order => {
+            const prodName = order.product?.name || 'Produto sem nome';
+            const qtd = order.amount || 1;
+            const complements = getComplementsString(order);
+
+            rows.push({
+              dataHora: dataStr,
+              dataSort: session.start_time,
+              mesa: mesa,
+              statusMesa: statusMesa,
+              isClosed: isClosed,
+              cliente: cliente,
+              garcom: garcom,
+              produto: prodName,
+              qtd: qtd,
+              complements: complements
+            });
+          });
+        });
+      });
+    });
+
+    rows.sort((a, b) => (a.dataSort < b.dataSort ? 1 : -1));
+
+    allRowsData = rows;
+    filteredRows = rows;
+
+    updateStats({
+      waiters: waitersSet.size,
+      clients: clientsSet.size
+    });
+
+    renderRows(rows);
+  }
+
+  function updateStats(stats) {
+    totalWaitersSpan.textContent = stats.waiters || 0;
+    totalClientsSpan.textContent = stats.clients || 0;
+  }
+
+  function renderRows(rows) {
+    if (!rows || rows.length === 0) {
+      resultsBody.innerHTML = `<tr><td colspan="8" class="empty-state">Nenhum pedido corresponde ao filtro.</td></tr>`;
+      return;
+    }
+
+    let html = '';
+    rows.forEach(row => {
+      const mesaStatusClass = row.isClosed ? 'badge-closed' : 'badge-open';
+
+      html += `<tr>
+        <td style="white-space:nowrap;">${row.dataHora}</td>
+        <td><strong>${row.mesa}</strong></td>
+        <td><span class="badge-status ${mesaStatusClass}">${row.statusMesa}</span></td>
+        <td><strong>${row.cliente}</strong></td>
+        <td><span class="clickable-copy" onclick="copyToClipboard('${row.garcom}')" title="Clique para copiar">${row.garcom}</span></td>
+        <td><strong>${row.produto}</strong></td>
+        <td style="text-align:center;">${row.qtd}</td>
+        <td style="max-width:200px;">${row.complements}</td>
+      </tr>`;
+    });
+
+    resultsBody.innerHTML = html;
+  }
+
+  // ============================================================
+  // COPIAR GARÇOM
+  // ============================================================
+  function copyToClipboard(text) {
+    if (!text || text === '—') return;
+    navigator.clipboard.writeText(text).then(() => {
+      const el = document.activeElement;
+      if (el) {
+        const orig = el.textContent;
+        el.textContent = '✅ Copiado!';
+        setTimeout(() => { el.textContent = orig; }, 800);
+      }
+    }).catch(() => {});
+  }
+  window.copyToClipboard = copyToClipboard;
+
+  // ============================================================
+  // FILTROS E EVENTOS
+  // ============================================================
+  searchInput.addEventListener('input', () => {
+    const term = searchInput.value.toLowerCase().trim();
+    if (!term) {
+      renderRows(allRowsData);
+      return;
+    }
+    const filtered = allRowsData.filter(row => {
+      const searchable = [
+        row.cliente, row.garcom, row.produto, row.complements,
+        String(row.mesa), row.dataHora, row.statusMesa
+      ].join(' ').toLowerCase();
+      return searchable.includes(term);
+    });
+    filteredRows = filtered;
+    renderRows(filtered);
+  });
+
+  document.querySelectorAll('[data-range]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('[data-range]').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const range = btn.dataset.range;
+      if (range === 'custom') {
+        customStart.style.display = 'inline-block';
+        customEnd.style.display = 'inline-block';
+        applyCustomBtn.style.display = 'inline-block';
+        const now = new Date();
+        const todayStr = now.toISOString().slice(0,16);
+        customStart.value = todayStr;
+        customEnd.value = todayStr;
+        return;
+      } else {
+        customStart.style.display = 'none';
+        customEnd.style.display = 'none';
+        applyCustomBtn.style.display = 'none';
+      }
+      fetchData(range);
+    });
+  });
+
+  applyCustomBtn.addEventListener('click', () => {
+    const start = customStart.value;
+    const end = customEnd.value;
+    if (!start || !end) {
+      alert('Preencha as duas datas.');
+      return;
+    }
+    fetchData('custom', start, end);
+  });
+
+  customStart.style.display = 'none';
+  customEnd.style.display = 'none';
+  applyCustomBtn.style.display = 'none';
+
+  // ============================================================
+  // EXPORTAR CSV (também enxuto)
+  // ============================================================
+  exportCsvBtn.addEventListener('click', () => {
+    const dataToExport = filteredRows.length > 0 ? filteredRows : allRowsData;
+    if (!dataToExport || dataToExport.length === 0) {
+      alert('Nenhum dado para exportar.');
+      return;
+    }
+
+    const headers = ['Data/Hora','Mesa','Status Mesa','Cliente','Garçom','Produto','Qtd','Complementos'];
+    const rowsCsv = dataToExport.map(row => [
+      row.dataHora, row.mesa, row.statusMesa, row.cliente, row.garcom,
+      row.produto, row.qtd, row.complements
+    ]);
+
+    let csvContent = headers.join(',') + '\n';
+    rowsCsv.forEach(row => {
+      csvContent += row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',') + '\n';
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `pedidos_${new Date().toISOString().slice(0,10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  });
+
+  // ============================================================
+  // SAIR (recarrega a página)
+  // ============================================================
+  logoutBtn.addEventListener('click', () => {
+    if (confirm('Deseja realmente sair? A sessão será encerrada.')) {
+      location.reload();
+    }
+  });
+
+  // ============================================================
+  // INICIALIZAÇÃO – carrega "Hoje"
+  // ============================================================
+  fetchData('today');
+</script>
+</body>
+</html>
