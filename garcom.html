@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Takeat Manager - Versão Enxuta</title>
+  <title>Takeat Manager - Enxuto</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -302,9 +302,9 @@
 
 <script>
   // ============================================================
-  // 🔗 URL DO SEU BACKEND (altere para a do Render)
+  // 🔗 URL DO SEU BACKEND NO RENDER (ATUALIZADO)
   // ============================================================
-  const BACKEND_URL = 'http://localhost:3000'; // ← substitua pelo link do Render
+  const BACKEND_URL = 'https://takeat-api.onrender.com';
 
   // ============================================================
   // VARIÁVEIS
@@ -473,6 +473,9 @@
     totalClientsSpan.textContent = stats.clients || 0;
   }
 
+  // ============================================================
+  // RENDERIZAÇÃO DAS LINHAS + FILTRO POR GARÇOM (NOVO)
+  // ============================================================
   function renderRows(rows) {
     if (!rows || rows.length === 0) {
       resultsBody.innerHTML = `<tr><td colspan="8" class="empty-state">Nenhum pedido corresponde ao filtro.</td></tr>`;
@@ -482,13 +485,18 @@
     let html = '';
     rows.forEach(row => {
       const mesaStatusClass = row.isClosed ? 'badge-closed' : 'badge-open';
+      
+      // Se tiver garçom, cria um link clicável para filtrar; senão, mostra "—"
+      const garcomDisplay = (row.garcom && row.garcom !== '—') ?
+        `<span class="clickable-copy" onclick="filtrarPorGarcom('${row.garcom.replace(/'/g, "\\'")}')" title="Clique para ver todos os pedidos deste garçom">${row.garcom}</span>` :
+        `<span style="color:#94a3b8;">—</span>`;
 
       html += `<tr>
         <td style="white-space:nowrap;">${row.dataHora}</td>
         <td><strong>${row.mesa}</strong></td>
         <td><span class="badge-status ${mesaStatusClass}">${row.statusMesa}</span></td>
         <td><strong>${row.cliente}</strong></td>
-        <td><span class="clickable-copy" onclick="copyToClipboard('${row.garcom}')" title="Clique para copiar">${row.garcom}</span></td>
+        <td>${garcomDisplay}</td>
         <td><strong>${row.produto}</strong></td>
         <td style="text-align:center;">${row.qtd}</td>
         <td style="max-width:200px;">${row.complements}</td>
@@ -499,7 +507,20 @@
   }
 
   // ============================================================
-  // COPIAR GARÇOM
+  // FUNÇÃO PARA FILTRAR POR GARÇOM (chamada pelo clique)
+  // ============================================================
+  function filtrarPorGarcom(nome) {
+    if (!nome || nome === '—') return;
+    // Preenche o campo de busca com o nome
+    const searchInput = document.getElementById('searchInput');
+    searchInput.value = nome;
+    // Dispara o evento 'input' para aplicar o filtro
+    searchInput.dispatchEvent(new Event('input'));
+  }
+  window.filtrarPorGarcom = filtrarPorGarcom; // expõe globalmente
+
+  // ============================================================
+  // COPIAR GARÇOM (mantido, mas não usado mais para clique)
   // ============================================================
   function copyToClipboard(text) {
     if (!text || text === '—') return;
@@ -515,7 +536,7 @@
   window.copyToClipboard = copyToClipboard;
 
   // ============================================================
-  // FILTROS E EVENTOS
+  // FILTRO DE BUSCA (já existente)
   // ============================================================
   searchInput.addEventListener('input', () => {
     const term = searchInput.value.toLowerCase().trim();
@@ -534,6 +555,9 @@
     renderRows(filtered);
   });
 
+  // ============================================================
+  // FILTROS RÁPIDOS (Hoje, Ontem, etc.)
+  // ============================================================
   document.querySelectorAll('[data-range]').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('[data-range]').forEach(b => b.classList.remove('active'));
@@ -572,7 +596,7 @@
   applyCustomBtn.style.display = 'none';
 
   // ============================================================
-  // EXPORTAR CSV (também enxuto)
+  // EXPORTAR CSV
   // ============================================================
   exportCsvBtn.addEventListener('click', () => {
     const dataToExport = filteredRows.length > 0 ? filteredRows : allRowsData;
@@ -601,10 +625,10 @@
   });
 
   // ============================================================
-  // SAIR (recarrega a página)
+  // SAIR
   // ============================================================
   logoutBtn.addEventListener('click', () => {
-    if (confirm('Deseja realmente sair? A sessão será encerrada.')) {
+    if (confirm('Deseja realmente sair?')) {
       location.reload();
     }
   });
